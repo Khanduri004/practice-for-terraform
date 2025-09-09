@@ -1,30 +1,32 @@
-resource "aws_kms_key" "Sept_Key" {
-  description             = "This key is used to encrypt bucket objects"
-  deletion_window_in_days = 10
+resource "random_string" "suffix" {
+  length  = 6
+  upper   = false
+  special = false
 }
 
-resource "aws_s3_bucket" "Sept_bucket" {
-  bucket = "Sept_bucket"
+resource "aws_s3_bucket" "sept_bucket" {
+  bucket = "sept-bucket-${random_string.suffix.result}"
 
   tags = {
     Name        = "Sept_bucket"
     Environment = "Dev"
   }
+}
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "Sept_Month" {
-  bucket = aws_s3_bucket.Sept_bucket.bucket
+resource "aws_s3_bucket_versioning" "versioning" {
+  bucket = aws_s3_bucket.sept_bucket.id
 
-  rule {
-    apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.Sept_Key.arn
-      sse_algorithm     = "aws:kms"
-    }
-  }
-
- resource "aws_s3_bucket_versioning" "versioning_example" {
-  bucket = aws_s3_bucket.Sept_bucket_id
   versioning_configuration {
     status = "Enabled"
   }
 }
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.sept_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
 }
